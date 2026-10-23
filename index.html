@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ひなた電子図書館｜利用構造分析</title>
+<style>
+:root {
+  --navy:#172b4d; --blue:#315ca8; --bg:#f4f7fb;
+  --line:#e1e7f0; --muted:#64748b;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--bg); color:#172033;
+  font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif;
+  line-height:1.65;
+}
+header { background:var(--navy); color:white; padding:24px 18px; }
+header .inner, main { max-width:1120px; margin:auto; }
+header h1 { margin:0; font-size:clamp(22px,4vw,30px); }
+header p { margin:5px 0 0; color:#dbeafe; }
+main { padding:24px 16px 60px; }
+.card {
+  background:white; border:1px solid var(--line); border-radius:16px;
+  padding:20px; margin-bottom:20px;
+  box-shadow:0 3px 12px #172b4d08;
+}
+h2 { margin:0 0 14px; font-size:20px; }
+.muted { color:var(--muted); font-size:14px; }
+.stats {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:12px; margin-bottom:20px;
+}
+.stat {
+  background:white; border:1px solid var(--line);
+  border-radius:14px; padding:16px;
+}
+.stat .label { color:var(--muted); font-size:13px; }
+.stat .value { font-size:28px; font-weight:750; margin-top:5px; }
+.upload {
+  border:2px dashed #b8c8e0; border-radius:12px;
+  padding:20px; background:#f8fbff;
+}
+input[type=file] { max-width:100%; margin:8px 0; }
+button {
+  border:0; border-radius:9px; padding:10px 16px;
+  color:white; background:var(--blue); cursor:pointer;
+  font-size:14px; font-weight:650;
+}
+button:hover { filter:brightness(.94); }
+.status { margin-top:10px; font-size:14px; }
+.status.error { color:#b42318; }
+.status.ok { color:#167647; }
+.chart-wrap { width:100%; overflow:hidden; }
+canvas { display:block; width:100%; height:430px; }
+.legend { display:flex; flex-wrap:wrap; gap:8px 16px; font-size:13px; }
+.legend span { display:flex; align-items:center; gap:6px; }
+.dot { display:inline-block; width:10px; height:10px; border-radius:50%; }
+table { width:100%; border-collapse:collapse; font-size:14px; }
+th,td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; }
+th { background:#f8fafc; }
+.table-wrap { overflow-x:auto; }
+.notice {
+  padding:12px 14px; border-radius:10px;
+  background:#eff6ff; color:#1e40af; font-size:14px;
+}
+footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
+@media(max-width:600px) {
+  main { padding:14px 10px 40px; }
+  .card { padding:15px; }
+  canvas { height:340px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="inner">
+    <h1>ひなた電子図書館</h1>
+    <p>利用構造分析・診断ダッシュボード</p>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>分析データ</h2>
+    <p class="muted">
+      Googleフォームの回答先スプレッドシートからCSVをダウンロードして読み込んでください。
+      元の回答データは変更されません。
+    </p>
+    <div class="upload">
+      <label for="csvFile"><strong>回答CSVを選択</strong></label><br>
+      <input id="csvFile" type="file" accept=".csv,text/csv">
+      <br><button id="loadBtn" type="button">CSVを読み込んで分析</button>
+      <div id="status" class="status" role="status">CSV未読み込み</div>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><div class="label">読み込み回答数</div><div class="value" id="total">—</div></div>
+    <div class="stat"><div class="label">分類済み</div><div class="value" id="classified">—</div></div>
+    <div class="stat"><div class="label">分類不可・未判定</div><div class="value" id="unclassified">—</div></div>
+    <div class="stat"><div class="label">分類数</div><div class="value" id="layerCount">—</div></div>
+  </div>
+
+  <section class="card">
+    <h2>利用者層の分布</h2>
+    <p class="muted">CSVに保存されている既存の分類結果を集計しています。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>分類</th><th>利用者タイプ</th><th>人数</th><th>割合</th></tr></thead>
+        <tbody id="layerTable"><tr><td colspan="4">CSVを読み込んでください。</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>PCA散布図</h2>
+    <p class="muted">
+      PC1・PC2は既存CSVに保存された座標を使用します。
+      点が近い回答者は、分析モデル上で回答傾向が近いことを示します。
+    </p>
+    <div id="legend" class="legend"></div>
+    <div class="chart-wrap"><canvas id="pca"></canvas></div>
+    <p id="plotInfo" class="muted">PC1・PC2の座標を含むCSVを読み込んでください。</p>
+  </section>
+
+  <section class="card">
+    <h2>データの確認</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>回答日時</th><th>利用者層</th><th>PC1</th><th>PC2</th><th>判定状態</th></tr></thead>
+        <tbody id="preview"><tr><td colspan="5">CSV未読み込み</td></tr></tbody>
+      </table>
+    </div>
+    <p class="muted">先頭10件を表示しています。</p>
+  </section>
+
+  <div class="notice">
+    現在はCSVファイルをブラウザ内で分析する試作版です。
+    自動同期、A〜Fの新規判定、フィードバック保存はまだ接続されていません。
+  </div>
+</main>
+<footer>ひなた電子図書館 利用構造分析</footer>
+
+<script>
+const LAYERS = {
+  A: "日常的に活用しているタイプ",
+  B: "使いやすさ次第で利用を続けたいタイプ",
+  C: "もっと手軽に使えたら利用したいタイプ",
+  D: "読みたい資料があれば利用したいタイプ",
+  E: "紙の本を中心に利用したいタイプ",
+  F: "まだ利用するきっかけが少ないタイプ"
+};
+const COLORS = {
+  A:"#2878b5", B:"#e69f00", C:"#009e73",
+  D:"#cc79a7", E:"#d55e00", F:"#777777", "その他":"#aab2bd"
+};
+let records = [];
+
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/, "");
+  const rows = [];
+  let row = [], field = "", quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        field += '"'; i++;
+      } else if (c === '"') {
+        quoted = false;
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      quoted = true;
+    } else if (c === ",") {
+      row.push(field); field = "";
+    } else if (c === "\n") {
+      row.push(field); rows.push(row);
+      row = []; field = "";
+    } else if (c !== "\r") {
+      field += c;
+    }
+  }
+  if (field !== "" || row.length) {
+    row.push(field); rows.push(row);
+  }
+  if (rows.length < 2) throw new Error("CSVにデータ行がありません。");
+
+  const headers = rows.shift().map(x => x.trim());
+  return rows.filter(r => r.some(v => v.trim() !== "")).map(r => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (r[i] ?? "").trim());
+    return obj;
+  });
+}
+
+function findColumn(headers, patterns) {
+  for (const p of patterns) {
+    const h = headers.find(x => x.toLowerCase() === p.toLowerCase());
+    if (h) return h;
+  }
+  for (const p of patterns) {
+    const h = headers.find(x => x.toLowerCase().includes(p.toLowerCase()));
+    if (h) return h;
+  }
+  return "";
+}
+function numberOrNull(v) {
+  if (v == null || String(v).trim() === "") return null;
+  const n = Number(String(v).replace(/,/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+function safeText(value) {
+  const el = document.createElement("span");
+  el.textContent = value ?? "";
+  return el.innerHTML;
+}
+function cell(text) {
+  const td = document.createElement("td");
+  td.textContent = text ?? "";
+  return td;
+}
+function setStatus(message, type = "") {
+  const el = document.getElementById("status");
+  el.textContent = message;
+  el.className = "status " + type;
+}
+function layerKey(r) {
+  const raw = r.layer || "";
+  const m = raw.match(/^[A-F]/i);
+  return m ? m[0].toUpperCase() : "";
+}
+function layerName(r) {
+  const k = layerKey(r);
+  return LAYERS[k] || r.layer_name || r.layer || "分類不可・未判定";
+}
+
+function render() {
+  const total = records.length;
+  const classifiedRows = records.filter(r => layerKey(r)).length;
+  const counts = {};
+  records.forEach(r => {
+    const k = layerKey(r);
+    const label = k || "その他";
+    counts[label] = (counts[label] || 0) + 1;
+  });
+
+  document.getElementById("total").textContent = total;
+  document.getElementById("classified").textContent = classifiedRows;
+  document.getElementById("unclassified").textContent = total - classifiedRows;
+  document.getElementById("layerCount").textContent =
+    Object.keys(counts).filter(k => k !== "その他").length;
+
+  const tbody = document.getElementById("layerTable");
+  tbody.replaceChildren();
+  ["A","B","C","D","E","F","その他"].forEach(k => {
+    const n = counts[k] || 0;
+    if (!n && k === "その他") return;
+    const tr = document.createElement("tr");
+    tr.append(cell(k === "その他" ? "その他・未判定" : k));
+    tr.append(cell(k === "その他" ? "分類不可・未判定" : LAYERS[k]));
+    tr.append(cell(String(n)));
+    tr.append(cell(total ? (n / total * 100).toFixed(1) + "%" : "—"));
+    tbody.append(tr);
+  });
+
+  const preview = document.getElementById("preview");
+  preview.replaceChildren();
+  records.slice(0, 10).forEach(r => {
+    const tr = document.createElement("tr");
+    tr.append(cell(r.timestamp || ""));
+    tr.append(cell(layerKey(r) ? layerKey(r) + "｜" + layerName(r) : layerName(r)));
+    tr.append(cell(r.pc1 ?? ""));
+    tr.append(cell(r.pc2 ?? ""));
+    tr.append(cell(r.status || ""));
+    preview.append(tr);
+  });
+  if (!records.length) {
+    const tr = document.createElement("tr");
+    const td = cell("データがありません。"); td.colSpan = 5; tr.append(td); preview.append(tr);
+  }
+  drawPlot();
+}
+
+function drawPlot() {
+  const canvas = document.getElementById("pca");
+  const ctx = canvas.getContext("2d");
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.max(300, rect.width) * dpr;
+  canvas.height = Math.max(280, rect.height) * dpr;
+  ctx.scale(dpr, dpr);
+
+  const W = Math.max(300, rect.width), H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const points = records.map(r => ({
+    x: numberOrNull(r.pc1), y: numberOrNull(r.pc2), k: layerKey(r)
+  })).filter(p => p.x !== null && p.y !== null);
+
+  const legend = document.getElementById("legend");
+  legend.replaceChildren();
+  ["A","B","C","D","E","F",""].forEach(k => {
+    const has = points.some(p => p.k === k);
+    if (!has) return;
+    const span = document.createElement("span");
+    const dot = document.createElement("i");
+    dot.className = "dot";
+    dot.style.background = COLORS[k || "その他"];
+    span.append(dot, document.createTextNode(k ? k + " " + LAYERS[k] : "分類不可"));
+    legend.append(span);
+  });
+
+  if (!points.length) {
+    ctx.fillStyle = "#64748b"; ctx.font = "14px sans-serif";
+    ctx.fillText("有効なPC1・PC2座標がありません。", 20, 35);
+    document.getElementById("plotInfo").textContent = "座標付き回答：0件";
+    return;
+  }
+
+  let xmin = Math.min(...points.map(p => p.x));
+  let xmax = Math.max(...points.map(p => p.x));
+  let ymin = Math.min(...points.map(p => p.y));
+  let ymax = Math.max(...points.map(p => p.y));
+  if (xmin === xmax) { xmin -= 1; xmax += 1; }
+  if (ymin === ymax) { ymin -= 1; ymax += 1; }
+  const xp = (xmax - xmin) * 0.08, yp = (ymax - ymin) * 0.08;
+  xmin -= xp; xmax += xp; ymin -= yp; ymax += yp;
+
+  const left = 55, right = 18, top = 18, bottom = 42;
+  const pw = W - left - right, ph = H - top - bottom;
+  const X = v => left + (v - xmin) / (xmax - xmin) * pw;
+  const Y = v => top + (ymax - v) / (ymax - ymin) * ph;
+
+  ctx.font = "11px sans-serif";
+  ctx.strokeStyle = "#e5eaf1"; ctx.fillStyle = "#64748b";
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const xx = left + pw * i / 5;
+    const yy = top + ph * i / 5;
+    ctx.beginPath(); ctx.moveTo(xx, top); ctx.lineTo(xx, top + ph); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(left, yy); ctx.lineTo(left + pw, yy); ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.fillText((xmin + (xmax - xmin) * i / 5).toFixed(1), xx, H - 22);
+    ctx.textAlign = "right";
+    ctx.fillText((ymax - (ymax - ymin) * i / 5).toFixed(1), left - 8, yy + 4);
+  }
+  ctx.strokeStyle = "#94a3b8";
+  ctx.beginPath(); ctx.moveTo(left, top); ctx.lineTo(left, top + ph);
+  ctx.lineTo(left + pw, top + ph); ctx.stroke();
+
+  ctx.fillStyle = "#334155"; ctx.font = "12px sans-serif";
+  ctx.textAlign = "center"; ctx.fillText("PC1", left + pw / 2, H - 4);
+  ctx.save(); ctx.translate(14, top + ph / 2); ctx.rotate(-Math.PI / 2);
+  ctx.fillText("PC2", 0, 0); ctx.restore();
+
+  points.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(X(p.x), Y(p.y), 4, 0, Math.PI * 2);
+    ctx.fillStyle = COLORS[p.k || "その他"];
+    ctx.globalAlpha = 0.76; ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+  document.getElementById("plotInfo").textContent =
+    "座標付き回答：" + points.length + "件 / 全回答：" + records.length + "件";
+}
+
+document.getElementById("loadBtn").addEventListener("click", async () => {
+  const file = document.getElementById("csvFile").files[0];
+  if (!file) {
+    setStatus("先にCSVファイルを選択してください。", "error");
+    return;
+  }
+  try {
+    setStatus("CSVを読み込み中…");
+    const text = await file.text();
+    const parsed = parseCSV(text);
+    if (!parsed.length) throw new Error("回答データがありません。");
+    const headers = Object.keys(parsed[0]);
+
+    const col = {
+      timestamp: findColumn(headers, ["タイムスタンプ","timestamp"]),
+      layer: findColumn(headers, ["利用者層","layer"]),
+      layerName: findColumn(headers, ["利用者層名","layer_name"]),
+      pc1: findColumn(headers, ["PC1"]),
+      pc2: findColumn(headers, ["PC2"]),
+      status: findColumn(headers, ["判定状態","status"])
+    };
+    records = parsed.map(row => ({
+      timestamp: col.timestamp ? row[col.timestamp] : "",
+      layer: col.layer ? row[col.layer] : "",
+      layer_name: col.layerName ? row[col.layerName] : "",
+      pc1: col.pc1 ? row[col.pc1] : "",
+      pc2: col.pc2 ? row[col.pc2] : "",
+      status: col.status ? row[col.status] : ""
+    }));
+    render();
+    const coords = records.filter(r =>
+      numberOrNull(r.pc1) !== null && numberOrNull(r.pc2) !== null
+    ).length;
+    setStatus(
+      "読み込み成功：" + records.length + "件。PCA座標あり：" + coords + "件。",
+      "ok"
+    );
+    if (!col.layer || !col.pc1 || !col.pc2) {
+      setStatus("CSVは読み込めましたが、利用者層・PC1・PC2の列をすべて確認できません。列名を確認してください。", "error");
+    }
+  } catch (err) {
+    setStatus("読み込みエラー：" + err.message, "error");
+  }
+});
+
+window.addEventListener("resize", () => {
+  if (records.length) drawPlot();
+});
+</script>
+</body>
+</html>
