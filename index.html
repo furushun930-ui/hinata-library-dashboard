@@ -95,6 +95,19 @@ footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
     </div>
   </section>
 
+  <section class="card">
+    <h2>Supabase連携（公開用集計）</h2>
+    <p class="muted">データベースから利用者層ごとの集計件数のみを取得します。個別回答はこの公開画面では取得しません。</p>
+    <div id="supabaseStatus" class="status" role="status">Supabaseに接続中…</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>分類</th><th>利用者タイプ</th><th>人数</th></tr></thead>
+        <tbody id="supabaseLayerTable"><tr><td colspan="3">読み込み中…</td></tr></tbody>
+      </table>
+    </div>
+    <p id="supabaseTotal" class="muted"></p>
+  </section>
+
   <div class="stats">
     <div class="stat"><div class="label">読み込み回答数</div><div class="value" id="total">—</div></div>
     <div class="stat"><div class="label">分類済み</div><div class="value" id="classified">—</div></div>
@@ -136,8 +149,7 @@ footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
   </section>
 
   <div class="notice">
-    現在はCSVファイルをブラウザ内で分析する試作版です。
-    自動同期、A〜Fの新規判定、フィードバック保存はまだ接続されていません。
+    Supabaseからは公開用の利用者層別集計のみを取得します。PCA散布図と個別データの確認は、これまでどおり手元のCSVを読み込んで表示します。Googleフォームの新規回答の自動同期と新規回答のA〜F判定は未接続です。
   </div>
 </main>
 <footer>ひなた電子図書館 利用構造分析</footer>
@@ -366,6 +378,61 @@ function drawPlot() {
   document.getElementById("plotInfo").textContent =
     "座標付き回答：" + points.length + "件 / 全回答：" + records.length + "件";
 }
+
+// Supabase公開設定：公開用のPublishable keyのみを使用します。
+// Secret key / service_role key は絶対にブラウザへ置かないでください。
+const SUPABASE_URL = "https://yrhbuejvphyatrivtzqi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_dABcxhG80aKxMRgPNjPkpA_TPIb9nMF";
+
+async function loadSupabaseCounts() {
+  const status = document.getElementById("supabaseStatus");
+  const tbody = document.getElementById("supabaseLayerTable");
+  const totalEl = document.getElementById("supabaseTotal");
+  try {
+    status.textContent = "Supabaseから集計を取得中…";
+    const url = SUPABASE_URL + "/rest/v1/survey_dashboard_counts?select=user_type,user_type_name,response_count&order=user_type.asc";
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "apikey": SUPABASE_PUBLISHABLE_KEY,
+        "Authorization": "Bearer " + SUPABASE_PUBLISHABLE_KEY
+      }
+    });
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error("HTTP " + response.status + (details ? "：" + details.slice(0, 180) : ""));
+    }
+    const rows = await response.json();
+    tbody.replaceChildren();
+    let total = 0;
+    if (!rows.length) {
+      const tr = document.createElement("tr");
+      const td = cell("集計データがありません。"); td.colSpan = 3; tr.append(td); tbody.append(tr);
+    }
+    rows.forEach(row => {
+      const tr = document.createElement("tr");
+      const key = row.user_type || "その他";
+      const count = Number(row.response_count) || 0;
+      total += count;
+      tr.append(cell(key));
+      tr.append(cell(row.user_type_name || LAYERS[key] || "分類不可・未判定"));
+      tr.append(cell(String(count)));
+      tbody.append(tr);
+    });
+    totalEl.textContent = "分類済み集計件数：" + total + "件（未分類の回答は含まれない場合があります）";
+    status.textContent = "Supabase接続成功：集計データ " + rows.length + "分類を取得しました。";
+    status.className = "status ok";
+  } catch (error) {
+    status.textContent = "Supabase接続に失敗しました。ビューの権限・Data API設定を確認してください。詳細：" + error.message;
+    status.className = "status error";
+    tbody.replaceChildren();
+    const tr = document.createElement("tr");
+    const td = cell("集計を取得できませんでした。"); td.colSpan = 3; tr.append(td); tbody.append(tr);
+    totalEl.textContent = "";
+  }
+}
+
+loadSupabaseCounts();
 
 document.getElementById("loadBtn").addEventListener("click", async () => {
   const file = document.getElementById("csvFile").files[0];
