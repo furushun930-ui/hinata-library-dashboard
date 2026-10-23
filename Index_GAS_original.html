@@ -1,0 +1,2242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+
+  <meta charset="UTF-8">
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #f5f7fa;
+      color: #172033;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Noto Sans JP",
+        sans-serif;
+      line-height: 1.7;
+    }
+
+    .container {
+      width: min(1100px, 94%);
+      margin: 0 auto;
+      padding: 35px 0 70px;
+    }
+
+    /* =========================
+       共通
+    ========================= */
+
+    .card {
+      background: white;
+      border: 1px solid #e1e6ed;
+      border-radius: 22px;
+      padding: 30px;
+      margin-bottom: 24px;
+      box-shadow: 0 3px 14px rgba(20, 40, 70, 0.04);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      letter-spacing: .02em;
+    }
+
+    h2 {
+      margin: 0 0 20px;
+      font-size: 26px;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .muted {
+      color: #667085;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #667085;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    /* =========================
+       ローディング
+    ========================= */
+
+    #loading {
+      text-align: center;
+      padding: 100px 20px;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 4px solid #e5e7eb;
+      border-top-color: #315ca8;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =========================
+       フォーム
+    ========================= */
+
+    .question {
+      margin-bottom: 30px;
+    }
+
+    .question-title {
+      font-weight: 700;
+      font-size: 17px;
+      margin-bottom: 12px;
+    }
+
+    .required {
+      display: inline-block;
+      color: white;
+      background: #d64545;
+      border-radius: 5px;
+      padding: 1px 7px;
+      font-size: 11px;
+      margin-left: 7px;
+    }
+
+    .option {
+      display: block;
+      border: 1px solid #dfe4ea;
+      border-radius: 12px;
+      padding: 12px 15px;
+      margin: 8px 0;
+      cursor: pointer;
+      transition: .15s;
+      background: #fff;
+    }
+
+    .option:hover {
+      border-color: #315ca8;
+      background: #f5f8ff;
+    }
+
+    .option input {
+      margin-right: 9px;
+    }
+
+    select,
+    input[type="text"],
+    textarea {
+      width: 100%;
+      border: 1px solid #d5dae1;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 16px;
+      background: white;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .scale-wrap {
+      overflow-x: auto;
+    }
+
+    .scale-options {
+      display: flex;
+      gap: 10px;
+      min-width: 420px;
+    }
+
+    .scale-option {
+      flex: 1;
+      text-align: center;
+    }
+
+    .scale-option input {
+      display: block;
+      margin: 0 auto 5px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 13px;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #315ca8;
+      color: white;
+    }
+
+    .primary:hover {
+      background: #274c91;
+    }
+
+    .back {
+      background: #e9edf3;
+      color: #26364d;
+    }
+
+    /* =========================
+       結果
+    ========================= */
+
+    #result {
+      display: none;
+    }
+
+    .result-hero {
+      text-align: center;
+      padding: 45px 25px;
+    }
+
+    .result-label {
+      font-size: 15px;
+      color: #667085;
+      margin-bottom: 5px;
+    }
+
+    .layer-badge {
+      display: inline-block;
+      padding: 8px 18px;
+      border-radius: 999px;
+      color: white;
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .result-layer {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    .result-description {
+      max-width: 760px;
+      margin: 0 auto;
+      color: #536174;
+      font-size: 17px;
+    }
+
+    /* =========================
+       指標
+    ========================= */
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 28px;
+    }
+
+    .metric {
+      border: 1px solid #e3e7ed;
+      border-radius: 15px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .metric-label {
+      color: #667085;
+      font-size: 14px;
+    }
+
+    .metric-value {
+      font-size: 25px;
+      font-weight: 800;
+      margin-top: 3px;
+    }
+
+    /* =========================
+       分布
+    ========================= */
+
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .summary-item {
+      background: #f7f8fa;
+      border-radius: 15px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .summary-number {
+      font-size: 28px;
+      font-weight: 800;
+    }
+
+    .layer-list {
+      margin-top: 22px;
+    }
+
+    .layer-row {
+      display: grid;
+      grid-template-columns: 220px 1fr 90px;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid #edf0f3;
+    }
+
+    .layer-row.me {
+      background: #f1f6ff;
+      border-radius: 10px;
+      padding-left: 12px;
+      padding-right: 12px;
+      border: 2px solid #315ca8;
+    }
+
+    .layer-name {
+      font-weight: 700;
+    }
+
+    .layer-bar-bg {
+      height: 11px;
+      border-radius: 99px;
+      background: #edf0f3;
+      overflow: hidden;
+    }
+
+    .layer-bar {
+      height: 100%;
+      border-radius: 99px;
+    }
+
+    .layer-count {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    /* =========================
+       グラフ
+    ========================= */
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border: 1px solid #e2e6eb;
+      border-radius: 18px;
+      background: #fff;
+    }
+
+    #chart {
+      width: 100%;
+      display: block;
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .legend-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .axis-explanation {
+      margin-top: 20px;
+      padding: 18px;
+      background: #f7f8fa;
+      border-radius: 14px;
+    }
+
+    .axis-explanation strong {
+      color: #243b64;
+    }
+
+    /* =========================
+       改善ポイント
+    ========================= */
+
+    .improvement {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .improvement-item {
+      padding: 15px 18px;
+      border-radius: 13px;
+      background: #f7f8fa;
+      border-left: 5px solid #315ca8;
+    }
+
+    /* =========================
+       詳細
+    ========================= */
+
+    details {
+      margin-top: 15px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: #315ca8;
+      font-weight: 700;
+    }
+
+    .detail-box {
+      margin-top: 12px;
+      background: #f7f8fa;
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    /* =========================
+       スマホ
+    ========================= */
+
+    @media(max-width: 700px) {
+
+      .container {
+        width: 94%;
+        padding-top: 20px;
+      }
+
+      .card {
+        padding: 20px;
+        border-radius: 17px;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+
+      .result-layer {
+        font-size: 31px;
+      }
+
+      .summary-box {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr;
+      }
+
+      .layer-row {
+        grid-template-columns: 1fr 90px;
+      }
+
+      .layer-bar-bg {
+        grid-column: 1 / 3;
+        grid-row: 2;
+      }
+
+      .legend {
+        grid-template-columns: 1fr 1fr;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+<div class="container">
+
+  <!-- =====================
+       LOADING
+  ====================== -->
+
+  <div id="loading">
+
+    <div class="spinner"></div>
+
+    <h2>アンケートを読み込んでいます</h2>
+
+    <p class="muted">
+      ひなた電子図書館の利用に関する設問を読み込んでいます。
+    </p>
+
+  </div>
+
+
+  <!-- =====================
+       FORM
+  ====================== -->
+
+  <div id="formArea" style="display:none;">
+
+    <div class="card">
+
+      <h1 id="formTitle">
+        ひなた電子図書館 利用調査
+      </h1>
+
+      <p id="formDescription"
+         class="muted"></p>
+
+    </div>
+
+
+    <form id="surveyForm">
+
+      <div id="questions"></div>
+
+      <div class="card center">
+
+        <button
+          type="submit"
+          class="primary"
+          id="submitButton">
+
+          回答を送信して結果を見る
+
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+
+  <!-- =====================
+       RESULT
+  ====================== -->
+
+  <div id="result">
+
+    <!-- 結果 -->
+    <div class="card result-hero">
+
+      <div class="result-label">
+        あなたのひなた電子図書館の利用タイプ
+      </div>
+
+      <div
+        id="layerBadge"
+        class="layer-badge">
+      </div>
+
+      <div
+        id="resultLayer"
+        class="result-layer">
+      </div>
+
+      <p
+        id="resultDescription"
+        class="result-description">
+      </p>
+
+    </div>
+
+
+    <!-- 全体の回答状況 -->
+
+    <div class="card">
+
+      <h2>回答者全体の状況</h2>
+
+      <div class="summary-box">
+
+        <div class="summary-item">
+
+          <div class="muted">
+            回答者
+          </div>
+
+          <div
+            id="responseTotal"
+            class="summary-number">
+            -
+          </div>
+
+          <div class="small">
+            人
+          </div>
+
+        </div>
+
+
+        <div class="summary-item">
+
+          <div class="muted">
+            分析対象
+          </div>
+
+          <div
+            id="classifiedTotal"
+            class="summary-number">
+            -
+          </div>
+
+          <div class="small">
+            人
+          </div>
+
+        </div>
+
+
+        <div class="summary-item">
+
+          <div class="muted">
+            未判定
+          </div>
+
+          <div
+            id="unclassifiedTotal"
+            class="summary-number">
+            -
+          </div>
+
+          <div class="small">
+            人
+          </div>
+
+        </div>
+
+      </div>
+
+      <p class="small"
+         style="margin-top:18px;">
+
+        ※「分析対象」は、利用者層判定に必要な質問項目を
+        すべて回答している回答者です。
+
+      </p>
+
+    </div>
+
+
+    <!-- 自分のタイプ -->
+
+    <div class="card">
+
+      <h2>あなたのタイプ</h2>
+
+      <p id="sameLayerText"
+         style="font-size:18px;">
+      </p>
+
+      <div class="improvement"
+            id="improvements">
+      </div>
+
+      <div id="feedbackSection" style="margin-top:28px; padding-top:22px; border-top:1px solid #e3e7ed;">
+        <h3>診断結果はあなたに当てはまっていますか？</h3>
+        <p class="muted">回答は研究の分析に利用します。診断結果に違和感がある場合も、率直に教えてください。</p>
+        <form id="feedbackForm">
+          <div class="question">
+            <label class="option"><input type="radio" name="diagnosisFeedback" value="合っている" required> 合っている</label>
+            <label class="option"><input type="radio" name="diagnosisFeedback" value="一部違う"> 一部違う</label>
+            <label class="option"><input type="radio" name="diagnosisFeedback" value="当てはまらない"> 当てはまらない</label>
+          </div>
+          <div class="question">
+            <label for="selectedLayer"><strong>自分に近いと思うタイプ（任意）</strong></label>
+            <select id="selectedLayer" name="selectedLayer">
+              <option value="">選択しない</option>
+              <option value="A">A：日常的に活用しているタイプ</option>
+              <option value="B">B：使いやすさ次第で利用を続けたいタイプ</option>
+              <option value="C">C：もっと手軽に使えたら利用したいタイプ</option>
+              <option value="D">D：読みたい資料があれば利用したいタイプ</option>
+              <option value="E">E：紙の本を中心に利用したいタイプ</option>
+              <option value="F">F：まだ利用するきっかけが少ないタイプ</option>
+            </select>
+          </div>
+          <div class="question">
+            <label for="feedbackComment"><strong>そう思った理由（任意）</strong></label>
+            <textarea id="feedbackComment" maxlength="2000" placeholder="例：電子書籍はよく使うが、読みたい本が少ないと感じる。"></textarea>
+          </div>
+          <button type="submit" class="primary" id="feedbackButton">診断への意見を送信</button>
+          <p id="feedbackMessage" class="small" aria-live="polite"></p>
+        </form>
+      </div>
+
+    </div>
+
+
+    <!-- A-F分布 -->
+
+    <div class="card">
+
+      <h2>利用者タイプの分布</h2>
+
+      <p class="muted">
+        分析対象となった回答者が、6つの利用者タイプにどのように分布しているかを示しています。
+      </p>
+
+      <div
+        id="layerList"
+        class="layer-list">
+      </div>
+
+    </div>
+
+
+    <!-- グラフ -->
+
+    <div class="card">
+
+      <h2>あなたの位置</h2>
+
+      <p class="muted">
+
+        あなたの回答と、分析対象者の回答傾向を比較しています。黒い丸があなたの位置です。点が近い人ほど、回答傾向が似ています。
+
+      </p>
+
+
+      <div class="chart-wrap">
+
+        <svg
+          id="chart"
+          viewBox="0 0 1000 620"
+          preserveAspectRatio="xMidYMid meet">
+        </svg>
+
+      </div>
+
+
+      <p class="small muted" style="margin-top:8px;">見方：横軸・縦軸は回答傾向を要約した統計上の軸です。右上・左下だけで積極性や関心の高さを判断することはできません。色は利用者タイプ、黒い丸はあなたの回答位置を示します。</p>
+
+      <!-- 凡例 -->
+
+      <div
+        id="legend"
+        class="legend">
+      </div>
+
+
+      <!-- 軸説明 -->
+
+      <div class="axis-explanation">
+
+        <div>
+          <strong>横軸（PC1）</strong>
+          ：回答傾向の違い（主成分1）
+        </div>
+
+        <div style="margin-top:7px;">
+          <strong>縦軸（PC2）</strong>
+          ：回答傾向の違い（主成分2）
+        </div>
+
+        <p class="small"
+           style="margin-bottom:0;">
+
+          ※PC1・PC2は回答内容を統計的に要約した軸です。右上が「積極的」、左下が「無関心」とは限りません。点が近いほど回答傾向が似ていることを示します。
+
+        </p>
+
+      </div>
+
+
+      <!-- 詳細値 -->
+
+      <details>
+
+        <summary>
+          詳細な分析値を見る
+        </summary>
+
+        <div class="detail-box">
+
+          <div>
+            PC1：
+            <strong id="pc1"></strong>
+          </div>
+
+          <div>
+            PC2：
+            <strong id="pc2"></strong>
+          </div>
+
+          <div>
+            判定距離：
+            <strong id="distance"></strong>
+          </div>
+
+          <div>
+            第2候補：
+            <strong id="second"></strong>
+          </div>
+
+        </div>
+
+      </details>
+
+    </div>
+
+
+    <!-- 戻る -->
+
+    <div class="center">
+
+      <button
+        class="back"
+        onclick="location.reload()">
+
+        最初の画面に戻る
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  /* =====================================================
+     利用者層
+  ===================================================== */
+
+  const LAYERS = {
+
+    A: {
+      name: "日常的に活用しているタイプ",
+      color: "#3b82f6",
+      description:
+        "ひなた電子図書館を継続的に利用し、読書や学習の中に取り入れている層です。",
+      improvements: [
+        "現在の利用しやすさを維持する",
+        "新しいコンテンツや便利な機能を継続的に提供する"
+      ]
+    },
+
+    B: {
+      name: "使いやすさ次第で利用を続けたいタイプ",
+      color: "#10b981",
+      description:
+        "ひなた電子図書館を使うことに関心はあるものの、使い方や操作のしやすさによって、今後も利用するかが変わりそうなタイプです。",
+      improvements: [
+        "ログイン・利用登録を簡単にする",
+        "検索機能を分かりやすくする",
+        "スマートフォンで直感的に操作できるようにする"
+      ]
+    },
+
+    C: {
+      name: "もっと手軽に使えたら利用したいタイプ",
+      color: "#f59e0b",
+      description:
+        "登録やログイン、検索などがもっと簡単になれば、利用を始めやすくなりそうなタイプです。",
+      improvements: [
+        "登録・ログイン手続きを簡単にする",
+        "検索・操作画面を分かりやすくする",
+        "スマートフォンでの利用環境を改善する"
+      ]
+    },
+
+    D: {
+      name: "読みたい資料があれば利用したいタイプ",
+      color: "#ef4444",
+      description:
+        "読みたい本や資料が見つかることを重視しており、コンテンツが充実すれば利用につながりそうなタイプです。",
+      improvements: [
+        "読みたい本・資料を増やす",
+        "ベストセラーや趣味分野の資料を充実させる",
+        "専門書・学習・調査用資料を充実させる"
+      ]
+    },
+
+    E: {
+      name: "紙の本を中心に利用したいタイプ",
+      color: "#8b5cf6",
+      description:
+        "読書では紙の本を選ぶことが多く、電子図書館は必要に応じて使いたい、または今のところ紙の本を中心に楽しみたいタイプです。",
+      improvements: [
+        "紙媒体を好む利用者にも無理なく利用できる位置づけを考える",
+        "電子版ならではの利便性を分かりやすく伝える"
+      ]
+    },
+
+    F: {
+      name: "まだ利用するきっかけが少ないタイプ",
+      color: "#6b7280",
+      description:
+        "ひなた電子図書館をまだよく知らない、または使う機会があまりないタイプです。まずはサービスを知ることが利用のきっかけになります。",
+      improvements: [
+        "まず電子図書館の存在を知ってもらう",
+        "どのようなサービスなのか分かりやすく説明する",
+        "利用方法を簡単に紹介する"
+      ]
+    }
+
+  };
+
+
+  /* =====================================================
+     初期化
+  ===================================================== */
+
+  let surveyDefinition = null;
+  let lastDiagnosisResult = null;
+
+
+  window.addEventListener(
+    "load",
+    function() {
+
+      google.script.run
+        .withSuccessHandler(
+          function(def) {
+
+            surveyDefinition = def;
+
+            renderSurvey(def);
+
+          }
+        )
+        .withFailureHandler(
+          function(err) {
+
+            showError(
+              "アンケートの読み込みに失敗しました。",
+              err
+            );
+
+          }
+        )
+        .getSurveyDefinition();
+
+    }
+  );
+
+
+  /* =====================================================
+     エラー
+  ===================================================== */
+
+  function showError(title, err) {
+
+    document.getElementById("loading").innerHTML = `
+
+      <div class="card">
+
+        <h2>${title}</h2>
+
+        <p>
+          ${escapeHtml(
+            err && err.message
+              ? err.message
+              : String(err)
+          )}
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =====================================================
+     アンケート描画
+  ===================================================== */
+
+  function renderSurvey(def) {
+
+    document.getElementById("loading")
+      .style.display = "none";
+
+    document.getElementById("formArea")
+      .style.display = "block";
+
+    document.getElementById("formTitle")
+      .textContent =
+        def.title ||
+        "ひなた電子図書館 利用調査";
+
+    document.getElementById("formDescription")
+      .textContent =
+        def.description || "";
+
+    const container =
+      document.getElementById("questions");
+
+    container.innerHTML = "";
+
+    def.items.forEach(function(item) {
+
+      const q =
+        document.createElement("div");
+
+      q.className = "card question";
+
+      const title =
+        document.createElement("div");
+
+      title.className =
+        "question-title";
+
+      title.innerHTML =
+        escapeHtml(item.q + "．" + item.title) +
+        (
+          item.required
+            ? '<span class="required">必須</span>'
+            : ""
+        );
+
+      q.appendChild(title);
+
+
+      if (item.kind === "radio") {
+
+        renderChoices(
+          q,
+          item,
+          false
+        );
+
+      }
+
+      else if (item.kind === "checkbox") {
+
+        renderChoices(
+          q,
+          item,
+          true
+        );
+
+      }
+
+      else if (item.kind === "scale") {
+
+        renderScale(q, item);
+
+      }
+
+      else if (item.kind === "list") {
+
+        renderList(q, item);
+
+      }
+
+      else if (item.kind === "text") {
+
+        const input =
+          document.createElement("input");
+
+        input.type = "text";
+        input.name = item.q;
+        input.dataset.q = item.q;
+
+        q.appendChild(input);
+
+      }
+
+      else if (item.kind === "paragraph") {
+
+        const textarea =
+          document.createElement("textarea");
+
+        textarea.name = item.q;
+        textarea.dataset.q = item.q;
+
+        q.appendChild(textarea);
+
+      }
+
+      container.appendChild(q);
+
+    });
+
+  }
+
+
+  /* =====================================================
+     選択肢
+  ===================================================== */
+
+  function renderChoices(
+    parent,
+    item,
+    multiple
+  ) {
+
+    item.choices.forEach(
+      function(choice) {
+
+        const label =
+          document.createElement("label");
+
+        label.className = "option";
+
+        const input =
+          document.createElement("input");
+
+        input.type =
+          multiple ? "checkbox" : "radio";
+
+        input.name =
+          item.q;
+
+        input.value =
+          choice.value;
+
+        input.dataset.q =
+          item.q;
+
+        label.appendChild(input);
+
+        label.appendChild(
+          document.createTextNode(
+            choice.value
+          )
+        );
+
+        parent.appendChild(label);
+
+      }
+    );
+
+  }
+
+
+  /* =====================================================
+     尺度
+  ===================================================== */
+
+  function renderScale(parent, item) {
+
+    const wrap =
+      document.createElement("div");
+
+    wrap.className = "scale-wrap";
+
+    const options =
+      document.createElement("div");
+
+    options.className =
+      "scale-options";
+
+    for (
+      let i = item.min;
+      i <= item.max;
+      i++
+    ) {
+
+      const label =
+        document.createElement("label");
+
+      label.className =
+        "scale-option";
+
+      const input =
+        document.createElement("input");
+
+      input.type = "radio";
+
+      input.name =
+        item.q;
+
+      input.value =
+        i;
+
+      input.dataset.q =
+        item.q;
+
+      label.appendChild(input);
+
+      label.appendChild(
+        document.createTextNode(i)
+      );
+
+      options.appendChild(label);
+
+    }
+
+    wrap.appendChild(options);
+
+    parent.appendChild(wrap);
+
+  }
+
+
+  /* =====================================================
+     プルダウン
+  ===================================================== */
+
+  function renderList(parent, item) {
+
+    const select =
+      document.createElement("select");
+
+    select.name =
+      item.q;
+
+    select.dataset.q =
+      item.q;
+
+    const first =
+      document.createElement("option");
+
+    first.value = "";
+
+    first.textContent =
+      "選択してください";
+
+    select.appendChild(first);
+
+    item.choices.forEach(
+      function(choice) {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          choice.value;
+
+        option.textContent =
+          choice.value;
+
+        select.appendChild(option);
+
+      }
+    );
+
+    parent.appendChild(select);
+
+  }
+
+
+  /* =====================================================
+     送信
+  ===================================================== */
+
+  document
+    .getElementById("surveyForm")
+    .addEventListener(
+      "submit",
+      function(e) {
+
+        e.preventDefault();
+
+        const answers = [];
+
+        let valid = true;
+
+        surveyDefinition.items
+          .forEach(function(item) {
+
+            const elements =
+              document.querySelectorAll(
+                '[data-q="' +
+                item.q +
+                '"]'
+              );
+
+            if (!elements.length) {
+              return;
+            }
+
+            let value = "";
+
+            if (
+              item.kind === "checkbox"
+            ) {
+
+              value =
+                Array.from(elements)
+                  .filter(function(el) {
+                    return el.checked;
+                  })
+                  .map(function(el) {
+                    return el.value;
+                  });
+
+              if (
+                item.required &&
+                value.length === 0
+              ) {
+                valid = false;
+              }
+
+            }
+
+            else if (
+              item.kind === "radio" ||
+              item.kind === "scale"
+            ) {
+
+              const checked =
+                Array.from(elements)
+                  .find(function(el) {
+                    return el.checked;
+                  });
+
+              value =
+                checked
+                  ? checked.value
+                  : "";
+
+              if (
+                item.required &&
+                value === ""
+              ) {
+                valid = false;
+              }
+
+            }
+
+            else {
+
+              value =
+                elements[0].value;
+
+              if (
+                item.required &&
+                value === ""
+              ) {
+                valid = false;
+              }
+
+            }
+
+            answers.push({
+              q: item.q,
+              value: value
+            });
+
+          });
+
+
+        if (!valid) {
+
+          alert(
+            "必須項目に回答してください。"
+          );
+
+          return;
+
+        }
+
+
+        const button =
+          document.getElementById(
+            "submitButton"
+          );
+
+        button.disabled = true;
+
+        button.textContent =
+          "結果を計算しています…";
+
+
+        google.script.run
+
+          .withSuccessHandler(
+            function(result) {
+
+              showResult(result);
+
+            }
+          )
+
+          .withFailureHandler(
+            function(err) {
+
+              button.disabled = false;
+
+              button.textContent =
+                "回答を送信して結果を見る";
+
+              alert(
+                "送信に失敗しました。\n\n" +
+                (
+                  err.message ||
+                  String(err)
+                )
+              );
+
+            }
+          )
+
+          .submitSurvey({
+            answers: answers
+          });
+
+      }
+    );
+
+
+  /* =====================================================
+     結果表示
+  ===================================================== */
+
+  function showResult(result) {
+
+    lastDiagnosisResult = result;
+    document.getElementById("formArea")
+      .style.display = "none";
+
+    document.getElementById("result")
+      .style.display = "block";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+
+    const layer =
+      result.layer;
+
+    const info =
+      LAYERS[layer];
+
+
+    // メイン結果
+
+    const badge =
+      document.getElementById(
+        "layerBadge"
+      );
+
+    badge.textContent =
+      layer + "層";
+
+    badge.style.background =
+      info.color;
+
+
+    document.getElementById(
+      "resultLayer"
+    ).textContent =
+      info.name;
+
+
+    document.getElementById(
+      "resultDescription"
+    ).textContent =
+      result.description ||
+      info.description;
+
+
+    // 人数
+
+    const total =
+      result.total ||
+      result.classifiedTotal ||
+      0;
+
+    const counts =
+      result.counts || {};
+
+    const count =
+      counts[layer] || 0;
+
+
+    document.getElementById(
+      "sameLayerText"
+    ).innerHTML =
+
+      "あなたと同じ<strong>" +
+      escapeHtml(
+        layer + "層「" +
+        info.name +
+        "」"
+      ) +
+      "</strong>は、分析対象者の " +
+
+      "<strong>" +
+      count +
+      "人</strong> です。<br>" +
+
+      "<span class='small'>" +
+
+      total +
+      "人中 " +
+      (
+        total
+          ? (count / total * 100).toFixed(1)
+          : 0
+      ) +
+
+      "%が同じタイプです。</span>";
+
+
+    // 改善ポイント
+
+    const improvements =
+      document.getElementById(
+        "improvements"
+      );
+
+    improvements.innerHTML =
+      "<h3>あなたのタイプで考えられる改善ポイント</h3>" +
+
+      info.improvements
+        .map(function(x) {
+
+          return `
+            <div class="improvement-item">
+              ${escapeHtml(x)}
+            </div>
+          `;
+
+        })
+        .join("");
+
+
+    // 回答者数
+
+    document.getElementById(
+      "responseTotal"
+    ).textContent =
+      result.responseTotal ??
+      total;
+
+
+    document.getElementById(
+      "classifiedTotal"
+    ).textContent =
+      result.classifiedTotal ??
+      total;
+
+
+    document.getElementById(
+      "unclassifiedTotal"
+    ).textContent =
+      result.unclassifiedTotal ??
+      Math.max(
+        0,
+        (
+          result.responseTotal ||
+          total
+        ) - total
+      );
+
+
+    // 詳細値
+
+    document.getElementById(
+      "pc1"
+    ).textContent =
+      Number(result.pc1 || 0)
+        .toFixed(2);
+
+    document.getElementById(
+      "pc2"
+    ).textContent =
+      Number(result.pc2 || 0)
+        .toFixed(2);
+
+    document.getElementById(
+      "distance"
+    ).textContent =
+      Number(result.distance || 0)
+        .toFixed(2);
+
+    document.getElementById(
+      "second"
+    ).textContent =
+      (
+        result.second || ""
+      ) +
+      " " +
+      (
+        result.secondName || ""
+      );
+
+
+    // 分布
+
+    renderLayerList(
+      counts,
+      layer,
+      total
+    );
+
+
+    // 凡例
+
+    renderLegend();
+
+
+    // グラフ
+
+    drawChart(
+      result.map || [],
+      {
+        layer: layer,
+        pc1: Number(result.pc1 || 0),
+        pc2: Number(result.pc2 || 0)
+      }
+    );
+
+  }
+
+
+  // 診断結果へのフィードバック送信
+  document.getElementById("feedbackForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    if (!lastDiagnosisResult) return;
+
+    const selected = document.querySelector('input[name="diagnosisFeedback"]:checked');
+    if (!selected) {
+      alert("診断結果への評価を選択してください。");
+      return;
+    }
+
+    const button = document.getElementById("feedbackButton");
+    const message = document.getElementById("feedbackMessage");
+    button.disabled = true;
+    button.textContent = "送信しています…";
+    message.textContent = "";
+
+    google.script.run
+      .withSuccessHandler(function() {
+        message.textContent = "ご意見を受け付けました。ご協力ありがとうございます。";
+        button.textContent = "送信済み";
+      })
+      .withFailureHandler(function(err) {
+        button.disabled = false;
+        button.textContent = "診断への意見を送信";
+        message.textContent = "送信できませんでした。時間をおいて再度お試しください。";
+        console.error(err);
+      })
+      .submitFeedback({
+        responseRow: lastDiagnosisResult.row,
+        diagnosedLayer: lastDiagnosisResult.layer,
+        feedback: selected.value,
+        selectedLayer: document.getElementById("selectedLayer").value,
+        comment: document.getElementById("feedbackComment").value.trim()
+      });
+  });
+
+
+  /* =====================================================
+     層分布
+  ===================================================== */
+
+  function renderLayerList(
+    counts,
+    myLayer,
+    total
+  ) {
+
+    const container =
+      document.getElementById(
+        "layerList"
+      );
+
+    container.innerHTML = "";
+
+
+    Object.keys(LAYERS)
+      .forEach(function(layer) {
+
+        const info =
+          LAYERS[layer];
+
+        const count =
+          counts[layer] || 0;
+
+        const percent =
+          total
+            ? count / total * 100
+            : 0;
+
+
+        const row =
+          document.createElement("div");
+
+        row.className =
+          "layer-row" +
+          (
+            layer === myLayer
+              ? " me"
+              : ""
+          );
+
+
+        const name =
+          document.createElement("div");
+
+        name.className =
+          "layer-name";
+
+        name.textContent =
+          (
+            layer === myLayer
+              ? "● あなた　"
+              : ""
+          ) +
+          layer +
+          " " +
+          info.name;
+
+
+        const barBg =
+          document.createElement("div");
+
+        barBg.className =
+          "layer-bar-bg";
+
+        const bar =
+          document.createElement("div");
+
+        bar.className =
+          "layer-bar";
+
+        bar.style.width =
+          percent + "%";
+
+        bar.style.background =
+          info.color;
+
+        barBg.appendChild(bar);
+
+
+        const countBox =
+          document.createElement("div");
+
+        countBox.className =
+          "layer-count";
+
+        countBox.textContent =
+          count +
+          "人 (" +
+          percent.toFixed(1) +
+          "%)";
+
+
+        row.appendChild(name);
+
+        row.appendChild(barBg);
+
+        row.appendChild(countBox);
+
+        container.appendChild(row);
+
+      });
+
+  }
+
+
+  /* =====================================================
+     凡例
+  ===================================================== */
+
+  function renderLegend() {
+
+    const legend =
+      document.getElementById(
+        "legend"
+      );
+
+    legend.innerHTML = "";
+
+    Object.keys(LAYERS)
+      .forEach(function(layer) {
+
+        const item =
+          document.createElement("div");
+
+        item.className =
+          "legend-item";
+
+
+        const dot =
+          document.createElement("span");
+
+        dot.className =
+          "legend-dot";
+
+        dot.style.background =
+          LAYERS[layer].color;
+
+
+        const text =
+          document.createElement("span");
+
+        text.textContent =
+          layer +
+          " " +
+          LAYERS[layer].name;
+
+
+        item.appendChild(dot);
+
+        item.appendChild(text);
+
+        legend.appendChild(item);
+
+      });
+
+  }
+
+
+  /* =====================================================
+     SVGグラフ
+  ===================================================== */
+
+  function drawChart(
+    points,
+    me
+  ) {
+
+    const svg =
+      document.getElementById(
+        "chart"
+      );
+
+    svg.innerHTML = "";
+
+
+    const W = 1000;
+    const H = 620;
+
+    const left = 90;
+    const right = 35;
+    const top = 45;
+    const bottom = 92;
+
+    const width =
+      W - left - right;
+
+    const height =
+      H - top - bottom;
+
+
+    let all =
+      points.slice();
+
+    all.push({
+      pc1: me.pc1,
+      pc2: me.pc2,
+      layer: me.layer
+    });
+
+
+    if (!all.length) {
+      return;
+    }
+
+
+    const xs =
+      all.map(function(p) {
+        return Number(p.pc1);
+      });
+
+    const ys =
+      all.map(function(p) {
+        return Number(p.pc2);
+      });
+
+
+    let minX =
+      Math.min.apply(null, xs);
+
+    let maxX =
+      Math.max.apply(null, xs);
+
+    let minY =
+      Math.min.apply(null, ys);
+
+    let maxY =
+      Math.max.apply(null, ys);
+
+
+    if (minX === maxX) {
+      minX -= 1;
+      maxX += 1;
+    }
+
+    if (minY === maxY) {
+      minY -= 1;
+      maxY += 1;
+    }
+
+
+    const marginX =
+      (maxX - minX) * 0.08;
+
+    const marginY =
+      (maxY - minY) * 0.08;
+
+
+    minX -= marginX;
+    maxX += marginX;
+
+    minY -= marginY;
+    maxY += marginY;
+
+
+    function sx(x) {
+
+      return left +
+        (x - minX) /
+        (maxX - minX) *
+        width;
+
+    }
+
+
+    function sy(y) {
+
+      return top +
+        height -
+        (y - minY) /
+        (maxY - minY) *
+        height;
+
+    }
+
+
+    // 背景
+
+    svg.appendChild(
+      svgEl(
+        "rect",
+        {
+          x: 0,
+          y: 0,
+          width: W,
+          height: H,
+          fill: "#ffffff"
+        }
+      )
+    );
+
+
+    // グリッド
+
+    for (let i = 1; i <= 4; i++) {
+
+      const gx =
+        left +
+        width * i / 5;
+
+      const gy =
+        top +
+        height * i / 5;
+
+
+      svg.appendChild(
+        svgEl(
+          "line",
+          {
+            x1: gx,
+            y1: top,
+            x2: gx,
+            y2: top + height,
+            stroke: "#edf0f3",
+            "stroke-width": 1
+          }
+        )
+      );
+
+
+      svg.appendChild(
+        svgEl(
+          "line",
+          {
+            x1: left,
+            y1: gy,
+            x2: left + width,
+            y2: gy,
+            stroke: "#edf0f3",
+            "stroke-width": 1
+          }
+        )
+      );
+
+    }
+
+
+    // 目盛り（PC1・PC2の数値）を表示
+    for (let i = 0; i <= 4; i++) {
+      const valueX = minX + (maxX - minX) * i / 4;
+      const valueY = minY + (maxY - minY) * i / 4;
+      const px = left + width * i / 4;
+      const py = top + height - height * i / 4;
+      svg.appendChild(svgEl("text", { x: px, y: top + height + 24, "text-anchor": "middle", fill: "#667085", "font-size": 14 }, valueX.toFixed(1)));
+      svg.appendChild(svgEl("text", { x: left - 12, y: py + 5, "text-anchor": "end", fill: "#667085", "font-size": 14 }, valueY.toFixed(1)));
+    }
+
+    // 0の位置が表示範囲内にある場合、原点を通る補助線を表示
+    if (minX <= 0 && maxX >= 0) {
+      const x0 = sx(0);
+      svg.appendChild(svgEl("line", { x1: x0, y1: top, x2: x0, y2: top + height, stroke: "#98A2B3", "stroke-width": 1.5, "stroke-dasharray": "6 5" }));
+    }
+    if (minY <= 0 && maxY >= 0) {
+      const y0 = sy(0);
+      svg.appendChild(svgEl("line", { x1: left, y1: y0, x2: left + width, y2: y0, stroke: "#98A2B3", "stroke-width": 1.5, "stroke-dasharray": "6 5" }));
+    }
+
+    // 軸
+
+    svg.appendChild(
+      svgEl(
+        "line",
+        {
+          x1: left,
+          y1: top + height,
+          x2: left + width,
+          y2: top + height,
+          stroke: "#9ca3af",
+          "stroke-width": 2
+        }
+      )
+    );
+
+
+    svg.appendChild(
+      svgEl(
+        "line",
+        {
+          x1: left,
+          y1: top,
+          x2: left,
+          y2: top + height,
+          stroke: "#9ca3af",
+          "stroke-width": 2
+        }
+      )
+    );
+
+
+    // 回答者
+
+    points.forEach(function(p) {
+
+      const layer =
+        p.layer;
+
+      const info =
+        LAYERS[layer];
+
+      if (!info) {
+        return;
+      }
+
+
+      svg.appendChild(
+        svgEl(
+          "circle",
+          {
+            cx: sx(Number(p.pc1)),
+            cy: sy(Number(p.pc2)),
+            r: 6,
+            fill: info.color,
+            opacity: 0.62
+          }
+        )
+      );
+
+    });
+
+
+    // あなた
+
+    const mx =
+      sx(me.pc1);
+
+    const my =
+      sy(me.pc2);
+
+
+    // 外側リング
+
+    svg.appendChild(
+      svgEl(
+        "circle",
+        {
+          cx: mx,
+          cy: my,
+          r: 18,
+          fill: "#ffffff",
+          stroke: "#111827",
+          "stroke-width": 4
+        }
+      )
+    );
+
+
+    // 中央
+
+    svg.appendChild(
+      svgEl(
+        "circle",
+        {
+          cx: mx,
+          cy: my,
+          r: 5,
+          fill: "#111827"
+        }
+      )
+    );
+
+
+    // あなたラベル
+
+    const labelX =
+      Math.min(
+        mx + 23,
+        W - 110
+      );
+
+    const labelY =
+      Math.max(
+        my - 12,
+        30
+      );
+
+
+    svg.appendChild(
+      svgEl(
+        "text",
+        {
+          x: labelX,
+          y: labelY,
+          fill: "#111827",
+          "font-size": 21,
+          "font-weight": "800"
+        },
+        "あなた"
+      )
+    );
+
+
+    // 軸ラベル
+
+    svg.appendChild(
+      svgEl(
+        "text",
+        {
+          x: left + width / 2,
+          y: H - 20,
+          "text-anchor": "middle",
+          fill: "#344054",
+          "font-size": 18,
+          "font-weight": "700"
+        },
+        "PC1（主成分1）"
+      )
+    );
+
+
+    svg.appendChild(
+      svgEl(
+        "text",
+        {
+          x: 22,
+          y: top + height / 2,
+          "text-anchor": "middle",
+          fill: "#344054",
+          "font-size": 18,
+          "font-weight": "700",
+          transform:
+            "rotate(-90 22 " +
+            (top + height / 2) +
+            ")"
+        },
+        "PC2（主成分2）"
+      )
+    );
+
+  }
+
+
+  /* =====================================================
+     SVG生成
+  ===================================================== */
+
+  function svgEl(
+    tag,
+    attrs,
+    text
+  ) {
+
+    const el =
+      document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        tag
+      );
+
+    Object.keys(attrs)
+      .forEach(function(key) {
+
+        el.setAttribute(
+          key,
+          attrs[key]
+        );
+
+      });
+
+
+    if (text !== undefined) {
+
+      el.textContent = text;
+
+    }
+
+    return el;
+
+  }
+
+
+  /* =====================================================
+     HTMLエスケープ
+  ===================================================== */
+
+  function escapeHtml(str) {
+
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+</script>
+
+</body>
+</html>
